@@ -76,7 +76,7 @@ This project is open-source and available under the **MIT License**. You can fre
 
 For feedback, suggestions, or collaborations, feel free to reach out:
 
-- **Email**: [abdur@example.com](mailto:abdurrahman262023@gmail.com)
-- **GitHub**: [https://github.com/yourusername](https://github.com/ARahmanAR)
+- **Email**: [abdurrahman262023@gmail.com](mailto:abdurrahman262023@gmail.com)
+- **GitHub**: [ARahmanAR](https://github.com/ARahmanAR)
 
 Enjoy the game and its neon vibes! 🎮✨
