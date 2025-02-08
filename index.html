@@ -130,9 +130,18 @@
       var score = 0;
       var isGameOver = false;
       var isGameWin = false;
+
       // Event listeners for key presses (left, right, and restart key "R")
       document.addEventListener("keydown", keyDownHandler, false);
       document.addEventListener("keyup", keyUpHandler, false);
+
+      // Touch and mouse event listeners
+      canvas.addEventListener("touchstart", touchHandler, false);
+      canvas.addEventListener("touchmove", touchMoveHandler, false);
+      canvas.addEventListener("mousemove", mouseMoveHandler, false);
+      canvas.addEventListener("click", clickHandler, false);
+      canvas.addEventListener("touchend", touchEndHandler, false);
+
       function keyDownHandler(e) {
         if (e.key === "Right" || e.key === "ArrowRight") {
           rightPressed = true;
@@ -145,6 +154,7 @@
           }
         }
       }
+
       function keyUpHandler(e) {
         if (e.key === "Right" || e.key === "ArrowRight") {
           rightPressed = false;
@@ -152,6 +162,42 @@
           leftPressed = false;
         }
       }
+
+      function touchHandler(e) {
+        e.preventDefault();
+        var relativeX = e.touches[0].clientX - canvas.offsetLeft;
+        if (relativeX > 0 && relativeX < canvas.width) {
+          paddleX = relativeX - paddleWidth / 2;
+        }
+      }
+
+      function touchMoveHandler(e) {
+        e.preventDefault();
+        var relativeX = e.touches[0].clientX - canvas.offsetLeft;
+        if (relativeX > 0 && relativeX < canvas.width) {
+          paddleX = relativeX - paddleWidth / 2;
+        }
+      }
+
+      function mouseMoveHandler(e) {
+        var relativeX = e.clientX - canvas.offsetLeft;
+        if (relativeX > 0 && relativeX < canvas.width) {
+          paddleX = relativeX - paddleWidth / 2;
+        }
+      }
+
+      function clickHandler(e) {
+        if (isGameOver || isGameWin) {
+          resetGame();
+        }
+      }
+
+      function touchEndHandler(e) {
+        if (isGameOver || isGameWin) {
+          resetGame();
+        }
+      }
+
       // Collision detection for ball and bricks
       function collisionDetection() {
         for (var c = 0; c < brickColumnCount; c++) {
@@ -175,6 +221,7 @@
           }
         }
       }
+
       // Drawing functions
       function drawBall() {
         ctx.beginPath();
@@ -183,6 +230,7 @@
         ctx.fill();
         ctx.closePath();
       }
+
       function drawPaddle() {
         ctx.beginPath();
         ctx.rect(
@@ -195,6 +243,7 @@
         ctx.fill();
         ctx.closePath();
       }
+
       function drawBricks() {
         for (var c = 0; c < brickColumnCount; c++) {
           for (var r = 0; r < brickRowCount; r++) {
@@ -215,11 +264,13 @@
           }
         }
       }
+
       function drawScore() {
         ctx.font = "16px Arial";
         ctx.fillStyle = "#E17564";
-        ctx.fillText("Score: " + score, 8, 20);
+        ctx.fillText("Score: " + score, canvas.width - 100, 20); // Adjusted position
       }
+
       // Draws a message on the canvas (e.g., Game Over or You Win) along with the restart prompt.
       function drawGameOver(text) {
         ctx.font = "24px Arial";
@@ -233,6 +284,7 @@
           canvas.height / 2 + 30
         );
       }
+
       // Resets the game variables for a new game session.
       function resetGame() {
         x = canvas.width / 2;
@@ -247,6 +299,7 @@
         // Restart the game animation loop.
         requestAnimationFrame(draw);
       }
+
       // The main game loop
       function draw() {
         ctx.clearRect(0, 0, canvas.width, canvas.height);
@@ -255,11 +308,13 @@
         drawPaddle();
         drawScore();
         collisionDetection();
+
         // If the game is won, display winning message.
         if (isGameWin) {
           drawGameOver("YOU WIN!");
           return;
         }
+
         // Ball-wall collisions
         if (x + dx > canvas.width - ballRadius || x + dx < ballRadius) {
           dx = -dx;
@@ -277,24 +332,27 @@
             return;
           }
         }
+
         // Update ball position
         x += dx;
         y += dy;
+
         // Paddle movement
         if (rightPressed && paddleX < canvas.width - paddleWidth) {
           paddleX += 7;
         } else if (leftPressed && paddleX > 0) {
           paddleX -= 7;
         }
+
         requestAnimationFrame(draw);
       }
+
       // Start the game
       draw();
 
       // Dark/Light mode switcher functionality
       const modeSwitcher = document.getElementById("modeSwitcher");
       let isDarkMode = true;
-
       modeSwitcher.addEventListener("click", () => {
         document.body.classList.toggle("light-mode");
         isDarkMode = !isDarkMode;
