@@ -1,0 +1,307 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Brick Breaker Game</title>
+    <style>
+      body {
+        text-align: center;
+        background: #09122C;
+        color: #ffffff;
+        font-family: Arial, sans-serif;
+        transition: background 0.3s ease, color 0.3s ease;
+        margin: 0;
+        height: 100vh;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+      }
+      h1 {
+        font-size: 2rem;
+        margin-bottom: 10px;
+        text-transform: uppercase;
+        letter-spacing: 2px;
+        font-weight: bold;
+        text-shadow: 0 0 5px rgba(225, 117, 100, 0.7);
+      }
+      canvas {
+        background: rgba(135, 35, 65, 0.25);
+        box-shadow: 0 0 10px 5px rgba(190, 49, 68, 0.7);
+        border-radius: 10px;
+        border: 1px solid rgba(255, 255, 255, 0.18);
+        display: block;
+        max-width: 100%;
+        height: auto;
+      }
+      .mode-switcher {
+        margin-top: 20px;
+        padding: 10px 20px;
+        background: #BE3144;
+        color: #fff;
+        border: none;
+        border-radius: 5px;
+        cursor: pointer;
+        font-size: 14px;
+        transition: background 0.3s ease, color 0.3s ease;
+        box-shadow: 0 0 5px 3px rgba(225, 117, 100, 0.7);
+      }
+      .mode-switcher:hover {
+        background: #872341;
+        box-shadow: 0 0 7px 4px rgba(225, 117, 100, 0.7);
+      }
+      body.light-mode {
+        background: #f0f0f0;
+        color: #000000;
+      }
+      body.light-mode canvas {
+        background: rgba(206, 225, 241, 0.25);
+        box-shadow: 0 0 8px 4px rgba(135, 35, 65, 0.7);
+        border: 1px solid rgba(0, 0, 0, 0.18);
+      }
+      body.light-mode .mode-switcher {
+        background: #872341;
+        color: #fff;
+        box-shadow: 0 0 5px 3px rgba(190, 49, 68, 0.7);
+      }
+      body.light-mode .mode-switcher:hover {
+        background: #BE3144;
+        box-shadow: 0 0 7px 4px rgba(225, 117, 100, 0.7);
+      }
+      @media (max-width: 600px) {
+        h1 {
+          font-size: 1.5rem;
+        }
+        canvas {
+          width: 90%;
+          height: auto;
+        }
+        .mode-switcher {
+          font-size: 12px;
+          padding: 8px 16px;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <h1>Brick Breaker by <a href="https://github.com/ARahmanAR" style="text-decoration: none; color:tomato">Abdur Rahman</a></h1>
+    <button class="mode-switcher" id="modeSwitcher">Switch to Light Mode</button>
+    <br><br>
+    <canvas id="myCanvas" width="480" height="320"></canvas>
+    <script>
+      // Get canvas and context
+      var canvas = document.getElementById("myCanvas");
+      var ctx = canvas.getContext("2d");
+      // Ball variables
+      var ballRadius = 10;
+      var x = canvas.width / 2;
+      var y = canvas.height - 30;
+      var dx = 2;
+      var dy = -2;
+      // Paddle variables
+      var paddleHeight = 10;
+      var paddleWidth = 75;
+      var paddleX = (canvas.width - paddleWidth) / 2;
+      // Control keys state
+      var rightPressed = false;
+      var leftPressed = false;
+      // Brick variables
+      var brickRowCount = 5;
+      var brickColumnCount = 3;
+      var brickWidth = 75;
+      var brickHeight = 20;
+      var brickPadding = 10;
+      var brickOffsetTop = 30;
+      var brickOffsetLeft = 30;
+      var bricks = [];
+      // Helper function to (re)initialize the brick layout
+      function initBricks() {
+        bricks = [];
+        for (var c = 0; c < brickColumnCount; c++) {
+          bricks[c] = [];
+          for (var r = 0; r < brickRowCount; r++) {
+            bricks[c][r] = { x: 0, y: 0, status: 1 };
+          }
+        }
+      }
+      initBricks();
+      // Score tracking and game state flags
+      var score = 0;
+      var isGameOver = false;
+      var isGameWin = false;
+      // Event listeners for key presses (left, right, and restart key "R")
+      document.addEventListener("keydown", keyDownHandler, false);
+      document.addEventListener("keyup", keyUpHandler, false);
+      function keyDownHandler(e) {
+        if (e.key === "Right" || e.key === "ArrowRight") {
+          rightPressed = true;
+        } else if (e.key === "Left" || e.key === "ArrowLeft") {
+          leftPressed = true;
+        } else if (e.key.toLowerCase() === "r") {
+          // Restart the game if it's over or won.
+          if (isGameOver || isGameWin) {
+            resetGame();
+          }
+        }
+      }
+      function keyUpHandler(e) {
+        if (e.key === "Right" || e.key === "ArrowRight") {
+          rightPressed = false;
+        } else if (e.key === "Left" || e.key === "ArrowLeft") {
+          leftPressed = false;
+        }
+      }
+      // Collision detection for ball and bricks
+      function collisionDetection() {
+        for (var c = 0; c < brickColumnCount; c++) {
+          for (var r = 0; r < brickRowCount; r++) {
+            var b = bricks[c][r];
+            if (b.status === 1) {
+              if (
+                x > b.x &&
+                x < b.x + brickWidth &&
+                y > b.y &&
+                y < b.y + brickHeight
+              ) {
+                dy = -dy;
+                b.status = 0;
+                score++;
+                if (score === brickRowCount * brickColumnCount) {
+                  isGameWin = true;
+                }
+              }
+            }
+          }
+        }
+      }
+      // Drawing functions
+      function drawBall() {
+        ctx.beginPath();
+        ctx.arc(x, y, ballRadius, 0, Math.PI * 2);
+        ctx.fillStyle = "#E17564";
+        ctx.fill();
+        ctx.closePath();
+      }
+      function drawPaddle() {
+        ctx.beginPath();
+        ctx.rect(
+          paddleX,
+          canvas.height - paddleHeight,
+          paddleWidth,
+          paddleHeight
+        );
+        ctx.fillStyle = "#E17564";
+        ctx.fill();
+        ctx.closePath();
+      }
+      function drawBricks() {
+        for (var c = 0; c < brickColumnCount; c++) {
+          for (var r = 0; r < brickRowCount; r++) {
+            if (bricks[c][r].status === 1) {
+              var brickX = r * (brickWidth + brickPadding) + brickOffsetLeft;
+              var brickY = c * (brickHeight + brickPadding) + brickOffsetTop;
+              bricks[c][r].x = brickX;
+              bricks[c][r].y = brickY;
+              ctx.beginPath();
+              ctx.roundRect(brickX, brickY, brickWidth, brickHeight, 5); // Rounded corners
+              ctx.fillStyle = `#${c === 0 ? "872341" : c === 1 ? "BE3144" : "E17564"}`;
+              ctx.fill();
+              ctx.strokeStyle = "#09122C";
+              ctx.lineWidth = 1;
+              ctx.stroke();
+              ctx.closePath();
+            }
+          }
+        }
+      }
+      function drawScore() {
+        ctx.font = "16px Arial";
+        ctx.fillStyle = "#E17564";
+        ctx.fillText("Score: " + score, 8, 20);
+      }
+      // Draws a message on the canvas (e.g., Game Over or You Win) along with the restart prompt.
+      function drawGameOver(text) {
+        ctx.font = "24px Arial";
+        ctx.fillStyle = "#E17564";
+        ctx.textAlign = "center";
+        ctx.fillText(text, canvas.width / 2, canvas.height / 2);
+        ctx.font = "16px Arial";
+        ctx.fillText(
+          "Press 'R' to Restart",
+          canvas.width / 2,
+          canvas.height / 2 + 30
+        );
+      }
+      // Resets the game variables for a new game session.
+      function resetGame() {
+        x = canvas.width / 2;
+        y = canvas.height - 30;
+        dx = 2;
+        dy = -2;
+        paddleX = (canvas.width - paddleWidth) / 2;
+        score = 0;
+        isGameOver = false;
+        isGameWin = false;
+        initBricks();
+        // Restart the game animation loop.
+        requestAnimationFrame(draw);
+      }
+      // The main game loop
+      function draw() {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        drawBricks();
+        drawBall();
+        drawPaddle();
+        drawScore();
+        collisionDetection();
+        // If the game is won, display winning message.
+        if (isGameWin) {
+          drawGameOver("YOU WIN!");
+          return;
+        }
+        // Ball-wall collisions
+        if (x + dx > canvas.width - ballRadius || x + dx < ballRadius) {
+          dx = -dx;
+        }
+        if (y + dy < ballRadius) {
+          dy = -dy;
+        } else if (y + dy > canvas.height - ballRadius) {
+          // Paddle collision check
+          if (x > paddleX && x < paddleX + paddleWidth) {
+            dy = -dy;
+          } else {
+            // Game over if the ball misses the paddle.
+            isGameOver = true;
+            drawGameOver("GAME OVER");
+            return;
+          }
+        }
+        // Update ball position
+        x += dx;
+        y += dy;
+        // Paddle movement
+        if (rightPressed && paddleX < canvas.width - paddleWidth) {
+          paddleX += 7;
+        } else if (leftPressed && paddleX > 0) {
+          paddleX -= 7;
+        }
+        requestAnimationFrame(draw);
+      }
+      // Start the game
+      draw();
+
+      // Dark/Light mode switcher functionality
+      const modeSwitcher = document.getElementById("modeSwitcher");
+      let isDarkMode = true;
+
+      modeSwitcher.addEventListener("click", () => {
+        document.body.classList.toggle("light-mode");
+        isDarkMode = !isDarkMode;
+        modeSwitcher.textContent = isDarkMode
+          ? "Switch to Light Mode"
+          : "Switch to Dark Mode";
+      });
+    </script>
+  </body>
+</html>
